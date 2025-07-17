@@ -1,0 +1,13 @@
+---
+services:
+  nessus:
+    container_name: nessus
+    image: tenable/nessus:latest-ubuntu
+    network_mode: host
+    environment:
+      - ACTIVATION_CODE=
+      - USERNAME=pentester
+      - PASSWORD=kali
+    restart: unless-stopped
+
+# https://127.0.0.1:8834/
