@@ -101,7 +101,7 @@ apply_customizations() {
 
     log INFO "Creating system directories..."
     mkdir -p "$TOOLS_DIR"
-    mkdir -p "$SHARE_DIR"
+    mkdir -p "$SHARE_DIR" 2>/dev/null || log WARN "Impossible de créer /mnt/_share (déjà monté ou inaccessible)"
 
     log INFO "Configuration du montage automatique de /mnt/_share"
     if ! grep -Fxq "$FSTAB_LINE" /etc/fstab; then
