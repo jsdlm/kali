@@ -135,6 +135,7 @@ apply_customizations() {
 # ---------------------------------------
 install_ktrace() {
     header "Installing ktrace"
+    chmod +x $WORK_DIR/ktrace/install.sh
     $WORK_DIR/ktrace/install.sh
 }
 
