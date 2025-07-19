@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Exec=qterminal -e /opt/tools/startup.sh
-Hidden=false
-NoDisplay=false
-X-GNOME-Autostart-enabled=true
-Name=Mon Script de Démarrage
-Comment=Fait un curl, affiche la date, et lance un script

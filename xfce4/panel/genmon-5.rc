@@ -1,0 +1,5 @@
+Command=/opt/sysutils/ip.sh
+UseLabel=0
+Text=
+UpdatePeriod=30000
+Font=Monospace Bold 11

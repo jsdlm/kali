@@ -1,0 +1,11 @@
+[Unit]
+Description=KTrace Screenshot Service
+After=graphical-session.target
+
+[Service]
+ExecStart=/opt/ktrace/ktrace.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -16,18 +16,23 @@ trap 'failure ${LINENO} "$BASH_COMMAND"' ERR
 # Constants
 # ---------------------------------------
 TOOLS_DIR="/opt/tools"
-BURP_DIR="$TOOLS_DIR/burpsuitepro"
+SYSUTILS_DIR="/opt/sysutils"
+SHARE_DIR="/mnt/_share"
+BACKGROUNDS_DIR="/usr/share/backgrounds"
+CUSTOM_BACKGROUNDS_DIR="$BACKGROUNDS_DIR/custom"
 BLOODHOUND_DIR="$TOOLS_DIR/bloodhound"
 NESSUS_DIR="$TOOLS_DIR/nessus"
 PENTESTER_USER="pentester"
 PENTESTER_HOME="/home/$PENTESTER_USER"
 ABS_DIR="$(realpath "${BASH_SOURCE[0]}")"
 WORK_DIR="$(dirname "$ABS_DIR")"
+FSTAB_LINE=".host:/_share  /mnt/_share  fuse.vmhgfs-fuse  allow_other,defaults  0  0"
+# sudo /usr/bin/vmhgfs-fuse .host:/_share /mnt/_share -o subtype=vmhgfs-fuse,allow_other
 
 export DEBIAN_FRONTEND=noninteractive
 
 # ---------------------------------------
-# Logging Functions (NetExec Style)
+# Logging Functions
 # ---------------------------------------
 log() {
     local level="$1"
@@ -76,37 +81,76 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # ---------------------------------------
-# Function: Autostart Setup
+# Function: Base System Setup
 # ---------------------------------------
-setup_startup() {
-    header "Autostart Setup"
-    mkdir -p $TOOLS_DIR
-    mkdir -p /mnt/_share
-    mkdir -p $PENTESTER_HOME/.config/autostart
-    cp "$WORK_DIR/startup.sh" "$TOOLS_DIR/"
-    chown -R "$PENTESTER_USER:$PENTESTER_USER" "$TOOLS_DIR"
-    cp "$WORK_DIR/startup.sh.desktop" "$PENTESTER_HOME/.config/autostart/"
-    chown -R "$PENTESTER_USER:$PENTESTER_USER" "$PENTESTER_HOME/.config/autostart/"
+setup_base_system() {
+    header "Base System Packages"
+    log INFO "Updating APT index..."
+    apt update -qq
+
+    log INFO "Installing base system packages..."
+    apt install -yqq build-essential python3-dev ca-certificates curl \
+        vim git gcc rsync
 }
 
 # ---------------------------------------
-# Function: System and Package Setup
+# Function: Desktop and Environment Customization
 # ---------------------------------------
-setup_system() {
-    header "System Update and Dependencies"
-    log INFO "Updating package index..."
-    apt update
+apply_customizations() {
+    header "Applying System Customizations"
 
-    log INFO "Installing base packages..."
-    apt install -yq build-essential python3-dev ca-certificates curl
+    log INFO "Creating system directories..."
+    mkdir -p "$TOOLS_DIR"
+    mkdir -p "$SHARE_DIR"
 
-    log INFO "Installing pentest tools..."
-    apt install -yq pipx nmap whatweb nikto sslscan curl gobuster ffuf \
-        exploitdb sqlmap hydra tcpdump git hashcat responder mitm6 \
-        wordlists libimage-exiftool-perl airgeddon vim
+    log INFO "Configuration du montage automatique de /mnt/_share"
+    if ! grep -Fxq "$FSTAB_LINE" /etc/fstab; then
+        echo "$FSTAB_LINE" >> /etc/fstab
+        log SUCCESS "Entrée ajoutée dans /etc/fstab"
+    else
+        log INFO "Entrée déjà présente dans /etc/fstab"
+    fi
+
+    log INFO "Installing sysutils to /opt..."
+    cp -R "$WORK_DIR/sysutils" "/opt"
+    chmod -R +x "$SYSUTILS_DIR"
+
+    log INFO "Installing custom wallpapers..."
+    mkdir -p "$CUSTOM_BACKGROUNDS_DIR"
+    cp -R "$WORK_DIR/backgrounds/"* "$CUSTOM_BACKGROUNDS_DIR/"
+
+    log INFO "Setting login background image..."
+    ln -sf "$CUSTOM_BACKGROUNDS_DIR/deb.png" /usr/share/desktop-base/kali-theme/login/background
+
+    log INFO "Applying XFCE configuration..."
+    rsync -av --inplace --checksum "$WORK_DIR/xfce4/" "$PENTESTER_HOME/.config/xfce4/"
+
+    log INFO "Disabling terminal transparency..."
+    sed -i 's/^TerminalTransparency=.*/TerminalTransparency=0/' "$PENTESTER_HOME/.config/qterminal.org/qterminal.ini"
+    sed -i 's/^ApplicationTransparency=.*/ApplicationTransparency=0/' "$PENTESTER_HOME/.config/qterminal.org/qterminal.ini"
+}
+
+# ---------------------------------------
+# Function: Ktrace Installation
+# ---------------------------------------
+install_ktrace() {
+    header "Installing ktrace"
+    $WORK_DIR/ktrace/install.sh
+}
+
+# ---------------------------------------
+# Function: Pentest Tools Installation
+# ---------------------------------------
+install_pentest_tools() {
+    header "Installing Pentest Tools"
+
+    log INFO "Installing common offensive tools..."
+    apt install -yqq pipx nmap whatweb nikto sslscan curl gobuster ffuf \
+        exploitdb sqlmap hydra tcpdump hashcat responder mitm6 \
+        wordlists libimage-exiftool-perl airgeddon
 
     log INFO "Installing Kerberos development libraries..."
-    apt install -yq libkrb5-dev krb5-config gcc python3-dev
+    apt install -yqq libkrb5-dev krb5-config
 }
 
 # ---------------------------------------
@@ -172,14 +216,14 @@ install_burp() {
         log INFO "Burp Suite Pro already installed, skipping."
         return
     fi
-    mkdir -p "$BURP_DIR"
+    mkdir -p "$SYSUTILS_DIR"
     mkdir -p "/home/$PENTESTER_USER/.java/.userPrefs/burp"
     mkdir -p "/root/.java/.userPrefs/burp"
     chown "$PENTESTER_USER:$PENTESTER_USER" "/home/$PENTESTER_USER/.java/.userPrefs" -R
 
-    wget "https://portswigger.net/burp/releases/download?product=pro&type=Linux" -O "$BURP_DIR/burpsuitepro.sh"
-    chmod +x "$BURP_DIR/burpsuitepro.sh"
-    bash "$BURP_DIR/burpsuitepro.sh"
+    wget "https://portswigger.net/burp/releases/download?product=pro&type=Linux" -O "$SYSUTILS_DIR/burpsuitepro.sh"
+    chmod +x "$SYSUTILS_DIR/burpsuitepro.sh"
+    bash "$SYSUTILS_DIR/burpsuitepro.sh"
 
     log INFO "Manual step required:"
     echo "    cp root_prefs.xml -d /root/.java/.userPrefs/burp/prefs.xml"
@@ -224,13 +268,7 @@ install_docker() {
 setup_bloodhound() {
     header "Setting up BloodHound CE"
     mkdir -p "$BLOODHOUND_DIR"
-
-    if [ ! -f "$BLOODHOUND_DIR/docker-compose.yml" ]; then
-        wget -O "$BLOODHOUND_DIR/docker-compose.yml" https://raw.githubusercontent.com/SpecterOps/bloodhound/main/examples/docker-compose/docker-compose.yml
-    else
-        log INFO "BloodHound docker-compose.yml already exists, skipping download."
-    fi
-
+    cp "$WORK_DIR/docker/bloodhound.yaml" "$BLOODHOUND_DIR/docker-compose.yml"
     docker compose -f "$BLOODHOUND_DIR/docker-compose.yml" pull
     chown -R "$PENTESTER_USER:$PENTESTER_USER" "$BLOODHOUND_DIR"
 }
@@ -241,7 +279,7 @@ setup_bloodhound() {
 setup_nessus() {
     header "Setting up Nessus"
     mkdir -p "$NESSUS_DIR"
-    cp "$WORK_DIR/nessus.yaml" "$NESSUS_DIR/docker-compose.yml"
+    cp "$WORK_DIR/docker/nessus.yaml" "$NESSUS_DIR/docker-compose.yml"
     docker compose -f "$NESSUS_DIR/docker-compose.yml" pull
     chown -R "$PENTESTER_USER:$PENTESTER_USER" "$NESSUS_DIR"
 
@@ -253,8 +291,10 @@ setup_nessus() {
 # ---------------------------------------
 # Main Execution
 # ---------------------------------------
-setup_startup
-setup_system
+setup_base_system
+apply_customizations
+install_ktrace
+install_pentest_tools
 install_pipx_tools
 clone_repos
 install_burp
