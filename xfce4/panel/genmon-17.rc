@@ -1,0 +1,6 @@
+Command=/opt/sysutils/ktrace-status.sh
+UseLabel=1
+Text=Ktrace\ 
+UpdatePeriod=5000
+Font=Monospace Bold 11
+
