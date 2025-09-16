@@ -4,6 +4,7 @@
 ```
 git clone https://github.com/jsdlm/kali.git
 cd kali
+chmod +x ./install.sh
 sudo ./install.sh
 ```
 
