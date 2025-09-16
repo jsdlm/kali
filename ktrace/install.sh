@@ -69,8 +69,8 @@ ALIASES=(
     "alias ktrace-stop='systemctl --user stop ktrace.service'"
     "alias ktrace-restart='systemctl --user restart ktrace.service'"
     "alias ktrace-status='systemctl --user status ktrace.service'"
-    "alias ktrace-enable='systemctl --user enable ktrace"
-    "alias ktrace-disable='systemctl --user disable ktrace"
+    "alias ktrace-enable='systemctl --user enable ktrace'"
+    "alias ktrace-disable='systemctl --user disable ktrace'"
 )
 
 log INFO "Ajout des alias dans $ALIAS_FILE (si absents)"
