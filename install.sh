@@ -114,6 +114,7 @@ apply_customizations() {
     log INFO "Installing sysutils to /opt..."
     cp -R "$WORK_DIR/sysutils" "/opt"
     chmod -R +x "$SYSUTILS_DIR"
+    chown -R "$PENTESTER_USER:$PENTESTER_USER" "$SYSUTILS_DIR"
 
     log INFO "Installing custom wallpapers..."
     mkdir -p "$CUSTOM_BACKGROUNDS_DIR"
