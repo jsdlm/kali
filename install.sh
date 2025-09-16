@@ -86,7 +86,8 @@ fi
 setup_base_system() {
     header "Base System Packages"
     log INFO "Updating APT index..."
-    apt update -qq
+    apt update -yqq
+    apt upgrade -yqq
 
     log INFO "Installing base system packages..."
     apt install -yqq build-essential python3-dev ca-certificates curl \
@@ -172,6 +173,8 @@ install_pipx_tools() {
     sudo -u "$PENTESTER_USER" pipx install certipy-ad
     sudo -u "$PENTESTER_USER" pipx install git+https://github.com/EnableSecurity/wafw00f.git
     sudo -u "$PENTESTER_USER" pipx install updog
+
+    sudo -u "$PENTESTER_USER" pipx upgrade-all
 }
 
 # ---------------------------------------
