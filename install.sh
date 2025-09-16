@@ -91,7 +91,7 @@ setup_base_system() {
 
     log INFO "Installing base system packages..."
     apt install -yqq build-essential python3-dev ca-certificates curl \
-        vim git gcc rsync
+        vim git gcc rsync golang
 }
 
 # ---------------------------------------
@@ -150,7 +150,7 @@ install_pentest_tools() {
     log INFO "Installing common offensive tools..."
     apt install -yqq pipx nmap whatweb nikto sslscan curl gobuster ffuf \
         exploitdb sqlmap hydra tcpdump hashcat responder mitm6 \
-        wordlists libimage-exiftool-perl airgeddon
+        wordlists libimage-exiftool-perl airgeddon testssl.sh
 
     log INFO "Installing Kerberos development libraries..."
     apt install -yqq libkrb5-dev krb5-config
@@ -173,6 +173,7 @@ install_pipx_tools() {
     sudo -u "$PENTESTER_USER" pipx install certipy-ad
     sudo -u "$PENTESTER_USER" pipx install git+https://github.com/EnableSecurity/wafw00f.git
     sudo -u "$PENTESTER_USER" pipx install updog
+    sudo -u "$PENTESTER_USER" pipx install sslyze
 
     sudo -u "$PENTESTER_USER" pipx upgrade-all
 }
