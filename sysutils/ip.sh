@@ -1,3 +1,3 @@
 #!/bin/bash
 
-curl -s --max-time 2 https://api.ipify.org || echo "N/A"
+curl -s --max-time 2 https://ifconfig.io/ || echo "N/A"

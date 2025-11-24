@@ -174,6 +174,8 @@ install_pipx_tools() {
     sudo -u "$PENTESTER_USER" pipx install git+https://github.com/EnableSecurity/wafw00f.git
     sudo -u "$PENTESTER_USER" pipx install updog
     sudo -u "$PENTESTER_USER" pipx install sslyze
+    sudo -u "$PENTESTER_USER" pipx install prowler
+    sudo -u "$PENTESTER_USER" pipx install scoutsuite
 
     sudo -u "$PENTESTER_USER" pipx upgrade-all
 }
