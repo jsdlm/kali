@@ -91,7 +91,7 @@ setup_base_system() {
 
     log INFO "Installing base system packages..."
     apt install -yqq build-essential python3-dev ca-certificates curl \
-        vim git gcc rsync golang
+        vim git gcc rsync golang apt-transport-https gnupg
 }
 
 # ---------------------------------------
@@ -124,8 +124,8 @@ apply_customizations() {
     log INFO "Setting login background image..."
     ln -sf "$CUSTOM_BACKGROUNDS_DIR/deb.png" /usr/share/desktop-base/kali-theme/login/background
 
-    log INFO "Applying XFCE configuration..."
-    rsync -av --inplace --checksum "$WORK_DIR/xfce4/" "$PENTESTER_HOME/.config/xfce4/"
+    # log INFO "Applying XFCE configuration..."
+    # rsync -av --inplace --checksum "$WORK_DIR/xfce4/" "$PENTESTER_HOME/.config/xfce4/"
 
     log INFO "Disabling terminal transparency..."
     sed -i 's/^TerminalTransparency=.*/TerminalTransparency=0/' "$PENTESTER_HOME/.config/qterminal.org/qterminal.ini"
@@ -171,7 +171,6 @@ install_pipx_tools() {
     sudo -u "$PENTESTER_USER" pipx install git+https://github.com/Pennyw0rth/NetExec
     sudo -u "$PENTESTER_USER" pipx install bloodhound-ce
     sudo -u "$PENTESTER_USER" pipx install certipy-ad
-    sudo -u "$PENTESTER_USER" pipx install git+https://github.com/EnableSecurity/wafw00f.git
     sudo -u "$PENTESTER_USER" pipx install updog
     sudo -u "$PENTESTER_USER" pipx install sslyze
     sudo -u "$PENTESTER_USER" pipx install prowler
@@ -277,7 +276,7 @@ setup_bloodhound() {
     header "Setting up BloodHound CE"
     mkdir -p "$BLOODHOUND_DIR"
     cp "$WORK_DIR/docker/bloodhound.yaml" "$BLOODHOUND_DIR/docker-compose.yml"
-    docker compose -f "$BLOODHOUND_DIR/docker-compose.yml" pull
+    # docker compose -f "$BLOODHOUND_DIR/docker-compose.yml" pull
     chown -R "$PENTESTER_USER:$PENTESTER_USER" "$BLOODHOUND_DIR"
 }
 
@@ -288,7 +287,7 @@ setup_nessus() {
     header "Setting up Nessus"
     mkdir -p "$NESSUS_DIR"
     cp "$WORK_DIR/docker/nessus.yaml" "$NESSUS_DIR/docker-compose.yml"
-    docker compose -f "$NESSUS_DIR/docker-compose.yml" pull
+    # docker compose -f "$NESSUS_DIR/docker-compose.yml" pull
     chown -R "$PENTESTER_USER:$PENTESTER_USER" "$NESSUS_DIR"
 
     log INFO "Manual step required:"
