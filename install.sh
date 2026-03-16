@@ -124,9 +124,6 @@ apply_customizations() {
     log INFO "Setting login background image..."
     ln -sf "$CUSTOM_BACKGROUNDS_DIR/deb.png" /usr/share/desktop-base/kali-theme/login/background
 
-    # log INFO "Applying XFCE configuration..."
-    # rsync -av --inplace --checksum "$WORK_DIR/xfce4/" "$PENTESTER_HOME/.config/xfce4/"
-
     log INFO "Disabling terminal transparency..."
     sed -i 's/^TerminalTransparency=.*/TerminalTransparency=0/' "$PENTESTER_HOME/.config/qterminal.org/qterminal.ini"
     sed -i 's/^ApplicationTransparency=.*/ApplicationTransparency=0/' "$PENTESTER_HOME/.config/qterminal.org/qterminal.ini"
@@ -150,7 +147,8 @@ install_pentest_tools() {
     log INFO "Installing common offensive tools..."
     apt install -yqq pipx nmap whatweb nikto sslscan curl gobuster ffuf \
         exploitdb sqlmap hydra tcpdump hashcat responder mitm6 \
-        wordlists libimage-exiftool-perl airgeddon testssl.sh
+        wordlists libimage-exiftool-perl airgeddon testssl.sh whois \
+        gitleaks dnsrecon dnsenum freerdp3-x11
 
     log INFO "Installing Kerberos development libraries..."
     apt install -yqq libkrb5-dev krb5-config
