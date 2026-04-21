@@ -119,14 +119,23 @@ apply_customizations() {
 
     log INFO "Installing custom wallpapers..."
     mkdir -p "$CUSTOM_BACKGROUNDS_DIR"
-    cp -R "$WORK_DIR/backgrounds/"* "$CUSTOM_BACKGROUNDS_DIR/"
+    if [ -n "$(ls -A "$WORK_DIR/backgrounds/" 2>/dev/null)" ]; then
+        cp -R "$WORK_DIR/backgrounds/." "$CUSTOM_BACKGROUNDS_DIR/"
+    else
+        log WARN "backgrounds/ is empty or missing, skipping."
+    fi
 
     log INFO "Setting login background image..."
     ln -sf "$CUSTOM_BACKGROUNDS_DIR/deb.png" /usr/share/desktop-base/kali-theme/login/background
 
     log INFO "Disabling terminal transparency..."
-    sed -i 's/^TerminalTransparency=.*/TerminalTransparency=0/' "$PENTESTER_HOME/.config/qterminal.org/qterminal.ini"
-    sed -i 's/^ApplicationTransparency=.*/ApplicationTransparency=0/' "$PENTESTER_HOME/.config/qterminal.org/qterminal.ini"
+    local qterminal_conf="$PENTESTER_HOME/.config/qterminal.org/qterminal.ini"
+    if [ -f "$qterminal_conf" ]; then
+        sed -i 's/^TerminalTransparency=.*/TerminalTransparency=0/' "$qterminal_conf"
+        sed -i 's/^ApplicationTransparency=.*/ApplicationTransparency=0/' "$qterminal_conf"
+    else
+        log WARN "qterminal.ini not found, skipping transparency config."
+    fi
 }
 
 # ---------------------------------------
@@ -150,8 +159,8 @@ install_pentest_tools() {
         wordlists libimage-exiftool-perl airgeddon testssl.sh whois \
         gitleaks dnsrecon dnsenum freerdp3-x11
 
-    log INFO "Installing Kerberos development libraries..."
-    apt install -yqq libkrb5-dev krb5-config
+    # log INFO "Installing Kerberos development libraries..."
+    # apt install -yqq libkrb5-dev krb5-config
 }
 
 # ---------------------------------------
@@ -296,6 +305,8 @@ setup_nessus() {
 # ---------------------------------------
 # Main Execution
 # ---------------------------------------
+id "$PENTESTER_USER" &>/dev/null || { log ERROR "User '$PENTESTER_USER' does not exist. Aborting."; exit 1; }
+
 setup_base_system
 apply_customizations
 install_ktrace
@@ -308,6 +319,7 @@ setup_bloodhound
 setup_nessus
 post_install_notes
 
+passwd -u root 2>/dev/null || true
 log SUCCESS "Setup completed successfully."
 read -p "Appuie sur Entrée pour reboot..."
 reboot
