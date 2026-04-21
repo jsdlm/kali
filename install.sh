@@ -11,6 +11,7 @@ failure() {
 }
 
 trap 'failure ${LINENO} "$BASH_COMMAND"' ERR
+trap 'passwd -u root 2>/dev/null || true' EXIT
 
 # ---------------------------------------
 # Constants
@@ -26,7 +27,7 @@ PENTESTER_USER="pentester"
 PENTESTER_HOME="/home/$PENTESTER_USER"
 ABS_DIR="$(realpath "${BASH_SOURCE[0]}")"
 WORK_DIR="$(dirname "$ABS_DIR")"
-FSTAB_LINE=".host:/_share  /mnt/_share  fuse.vmhgfs-fuse  allow_other,defaults  0  0"
+FSTAB_LINE=".host:/_share  /mnt/_share  fuse.vmhgfs-fuse  allow_other,defaults,nofail  0  0"
 # sudo /usr/bin/vmhgfs-fuse .host:/_share /mnt/_share -o subtype=vmhgfs-fuse,allow_other
 
 export DEBIAN_FRONTEND=noninteractive
