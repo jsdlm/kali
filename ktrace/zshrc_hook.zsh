@@ -13,7 +13,6 @@ _ktrace_start_session() {
     tty_id=$(tty 2>/dev/null | tr '/' '_') || tty_id="notty"
     export KTRACE_SESSION=1
     export KTRACE_LOG="$logdir/$(date +%H%M%S)${tty_id}_$$.log"
-    export KTRACE_CMD_LOG="$logdir/commands.log"
 }
 _ktrace_start_session
 unset -f _ktrace_start_session
@@ -40,8 +39,7 @@ if [[ -n "$KTRACE_SESSION" ]]; then
         local ts="$(date '+%Y-%m-%d %H:%M:%S')"
 
         # En-tête écrit directement dans le journal (bypass terminal)
-        printf '%s\n$ %s\n' "$ts" "$1" >> "$KTRACE_LOG"
-        printf '%s [%s] %s\n' "$ts" "${TTY##*/}" "$1" >> "$KTRACE_CMD_LOG"
+        printf '%s $ %s\n' "$ts" "$1" >> "$KTRACE_LOG"
 
         # Redirection stdout/stderr : tee vers terminal + sed ANSI-strip vers journal
         exec {_KTRACE_FD1}>&1 {_KTRACE_FD2}>&2
