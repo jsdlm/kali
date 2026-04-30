@@ -58,6 +58,10 @@ log INFO "Copie du hook terminal dans $INSTALL_DIR"
 cp "$(dirname "$0")/zshrc_hook.zsh" "$INSTALL_DIR/zshrc_hook.zsh"
 chmod 644 "$INSTALL_DIR/zshrc_hook.zsh"
 
+log INFO "Copie de ktrace-cat dans $INSTALL_DIR"
+cp "$(dirname "$0")/ktrace-cat.sh" "$INSTALL_DIR/ktrace-cat.sh"
+chmod +x "$INSTALL_DIR/ktrace-cat.sh"
+
 # Préparation du service utilisateur
 log INFO "Installation du service systemd --user"
 mkdir -p "$SERVICE_DIR"
@@ -77,7 +81,8 @@ ALIASES=(
     "alias ktrace-enable='systemctl --user enable ktrace'"
     "alias ktrace-disable='systemctl --user disable ktrace'"
     "alias ktrace-logs='ls /opt/ktrace/terminals/\$(date +%Y-%m-%d)/ 2>/dev/null || echo \"Aucun journal pour aujourd'\''hui\"'"
-    "alias ktrace-view='cat /opt/ktrace/terminals/\$(date +%Y-%m-%d)/commands.log 2>/dev/null || echo \"Aucune commande enregistrée pour aujourd'\''hui\"'"
+    "alias ktrace-cmds='cat /opt/ktrace/terminals/\$(date +%Y-%m-%d)/commands.log 2>/dev/null || echo \"Aucune commande enregistrée pour aujourd'\''hui\"'"
+    "alias ktrace-cat='/opt/ktrace/ktrace-cat.sh'"
 )
 
 log INFO "Ajout des alias dans $ALIAS_FILE (si absents)"
