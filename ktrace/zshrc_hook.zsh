@@ -3,5 +3,6 @@ if [[ -z "$KTRACE_SESSION" ]] && systemctl --user is-active --quiet ktrace.servi
     export KTRACE_SESSION=1
     _ktrace_dir="/opt/ktrace/terminals/$(date +%Y-%m-%d)"
     mkdir -p "$_ktrace_dir" 2>/dev/null
-    exec script -q -f "$_ktrace_dir/$(whoami)_$(date +%Y%m%d_%H%M%S)_$$.log"
+    exec script -q -f >(sed 's/\x1b\[[0-9;:?]*[a-zA-Z]//g; s/\x1b][^\x07]*\x07//g; s/\r//g' \
+        >> "$_ktrace_dir/$(whoami)_$(date +%Y%m%d_%H%M%S)_$$.log")
 fi
