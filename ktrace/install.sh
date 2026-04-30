@@ -47,11 +47,16 @@ log INFO "Création du répertoire $INSTALL_DIR"
 mkdir -p "$INSTALL_DIR"
 mkdir -p "$INSTALL_DIR/log"
 mkdir -p "$INSTALL_DIR/screenshots"
+mkdir -p "$INSTALL_DIR/terminals"
 
-# Copie du script principal
+# Copie du script principal et du hook zsh
 log INFO "Copie de $SCRIPT_NAME dans $INSTALL_DIR"
 cp "$(dirname "$0")/$SCRIPT_NAME" "$INSTALL_DIR/"
 chmod +x "$INSTALL_DIR/$SCRIPT_NAME"
+
+log INFO "Copie du hook terminal dans $INSTALL_DIR"
+cp "$(dirname "$0")/zshrc_hook.zsh" "$INSTALL_DIR/zshrc_hook.zsh"
+chmod 644 "$INSTALL_DIR/zshrc_hook.zsh"
 
 # Préparation du service utilisateur
 log INFO "Installation du service systemd --user"
@@ -71,12 +76,19 @@ ALIASES=(
     "alias ktrace-status='systemctl --user status ktrace.service'"
     "alias ktrace-enable='systemctl --user enable ktrace'"
     "alias ktrace-disable='systemctl --user disable ktrace'"
+    "alias ktrace-logs='ls /opt/ktrace/terminals/\$(date +%Y-%m-%d)/ 2>/dev/null || echo \"Aucun journal pour aujourd'\''hui\"'"
+    "alias ktrace-view='cat /opt/ktrace/terminals/\$(date +%Y-%m-%d)/commands.log 2>/dev/null || echo \"Aucune commande enregistrée pour aujourd'\''hui\"'"
 )
 
 log INFO "Ajout des alias dans $ALIAS_FILE (si absents)"
 for alias in "${ALIASES[@]}"; do
     grep -qxF "$alias" "$ALIAS_FILE" || echo "$alias" >> "$ALIAS_FILE"
 done
+
+# Ajout du hook de journalisation terminal (si absent)
+HOOK_LINE="[[ -f /opt/ktrace/zshrc_hook.zsh ]] && source /opt/ktrace/zshrc_hook.zsh"
+grep -qF "zshrc_hook.zsh" "$ALIAS_FILE" || echo "$HOOK_LINE" >> "$ALIAS_FILE"
+
 chown pentester:pentester "$ALIAS_FILE"
 
 # Ending
