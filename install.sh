@@ -23,12 +23,49 @@ BACKGROUNDS_DIR="/usr/share/backgrounds"
 CUSTOM_BACKGROUNDS_DIR="$BACKGROUNDS_DIR/custom"
 BLOODHOUND_DIR="$TOOLS_DIR/bloodhound"
 NESSUS_DIR="$TOOLS_DIR/nessus"
-PENTESTER_USER="pentester"
-PENTESTER_HOME="/home/$PENTESTER_USER"
+PENTESTER_USER=""
+PENTESTER_HOME=""
 ABS_DIR="$(realpath "${BASH_SOURCE[0]}")"
 WORK_DIR="$(dirname "$ABS_DIR")"
 FSTAB_LINE=".host:/_share  /mnt/_share  fuse.vmhgfs-fuse  allow_other,defaults,nofail  0  0"
 # sudo /usr/bin/vmhgfs-fuse .host:/_share /mnt/_share -o subtype=vmhgfs-fuse,allow_other
+
+# ---------------------------------------
+# Argument Parsing
+# ---------------------------------------
+INSTALL_MODE=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -u|--user) PENTESTER_USER="$2"; shift 2 ;;
+        -m|--mode) INSTALL_MODE="$2"; shift 2 ;;
+        *) echo "Unknown argument: $1"; exit 1 ;;
+    esac
+done
+
+if [ -z "$PENTESTER_USER" ]; then
+    read -rp "Nom du user pentester [pentester]: " PENTESTER_USER
+    PENTESTER_USER="${PENTESTER_USER:-pentester}"
+fi
+
+if [ -z "$INSTALL_MODE" ]; then
+    echo ""
+    echo "Choisir le mode d'installation :"
+    PS3="> "
+    select INSTALL_MODE in "full" "oscp"; do
+        case "$INSTALL_MODE" in
+            full|oscp) break ;;
+            *) echo "Choix invalide, entrer 1 ou 2." ;;
+        esac
+    done
+fi
+
+case "$INSTALL_MODE" in
+    full|oscp) ;;
+    *) echo "Mode inconnu : '$INSTALL_MODE'. Valeurs valides : full, oscp."; exit 1 ;;
+esac
+
+PENTESTER_HOME="/home/$PENTESTER_USER"
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -158,7 +195,8 @@ install_pentest_tools() {
     apt install -yqq pipx nmap whatweb nikto sslscan curl gobuster ffuf \
         exploitdb sqlmap hydra tcpdump hashcat responder mitm6 \
         wordlists libimage-exiftool-perl airgeddon testssl.sh whois \
-        gitleaks dnsrecon dnsenum powershell-empire webshells
+        gitleaks dnsrecon dnsenum powershell-empire webshells \
+        metasploit-framework mingw-w64
 
     # log INFO "Installing Kerberos development libraries..."
     # apt install -yqq libkrb5-dev krb5-config
@@ -308,17 +346,29 @@ setup_nessus() {
 # ---------------------------------------
 id "$PENTESTER_USER" &>/dev/null || { log ERROR "User '$PENTESTER_USER' does not exist. Aborting."; exit 1; }
 
-setup_base_system
-apply_customizations
-install_ktrace
-install_pentest_tools
-install_pipx_tools
-clone_repos
-install_burp
-install_docker
-setup_bloodhound
-setup_nessus
-post_install_notes
+log INFO "Mode : $INSTALL_MODE | User : $PENTESTER_USER"
+
+case "$INSTALL_MODE" in
+    full)
+        setup_base_system
+        apply_customizations
+        install_ktrace
+        install_pentest_tools
+        install_pipx_tools
+        clone_repos
+        install_burp
+        install_docker
+        setup_bloodhound
+        setup_nessus
+        post_install_notes
+        ;;
+    oscp)
+        install_ktrace
+        clone_repos
+        install_docker
+        setup_bloodhound
+        ;;
+esac
 
 passwd -u root 2>/dev/null || true
 log SUCCESS "Setup completed successfully."
