@@ -23,8 +23,8 @@ BACKGROUNDS_DIR="/usr/share/backgrounds"
 CUSTOM_BACKGROUNDS_DIR="$BACKGROUNDS_DIR/custom"
 BLOODHOUND_DIR="$TOOLS_DIR/bloodhound"
 NESSUS_DIR="$TOOLS_DIR/nessus"
-PENTESTER_USER=""
-PENTESTER_HOME=""
+USERNAME=""
+USER_HOME=""
 ABS_DIR="$(realpath "${BASH_SOURCE[0]}")"
 WORK_DIR="$(dirname "$ABS_DIR")"
 FSTAB_LINE=".host:/_share  /mnt/_share  fuse.vmhgfs-fuse  allow_other,defaults,nofail  0  0"
@@ -37,15 +37,15 @@ INSTALL_MODE=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        -u|--user) PENTESTER_USER="$2"; shift 2 ;;
+        -u|--user) USERNAME="$2"; shift 2 ;;
         -m|--mode) INSTALL_MODE="$2"; shift 2 ;;
         *) echo "Unknown argument: $1"; exit 1 ;;
     esac
 done
 
-if [ -z "$PENTESTER_USER" ]; then
-    read -rp "Nom du user pentester [pentester]: " PENTESTER_USER
-    PENTESTER_USER="${PENTESTER_USER:-pentester}"
+if [ -z "$USERNAME" ]; then
+    read -rp "Nom du user [pentester]: " USERNAME
+    USERNAME="${USERNAME:-pentester}"
 fi
 
 if [ -z "$INSTALL_MODE" ]; then
@@ -65,8 +65,9 @@ case "$INSTALL_MODE" in
     *) echo "Mode inconnu : '$INSTALL_MODE'. Valeurs valides : full, oscp."; exit 1 ;;
 esac
 
-PENTESTER_HOME="/home/$PENTESTER_USER"
+USER_HOME="/home/$USERNAME"
 
+export USERNAME
 export DEBIAN_FRONTEND=noninteractive
 
 # ---------------------------------------
@@ -153,7 +154,7 @@ apply_customizations() {
     log INFO "Installing sysutils to /opt..."
     cp -R "$WORK_DIR/sysutils" "/opt"
     chmod -R +x "$SYSUTILS_DIR"
-    chown -R "$PENTESTER_USER:$PENTESTER_USER" "$SYSUTILS_DIR"
+    chown -R "$USERNAME:$USERNAME" "$SYSUTILS_DIR"
 
     log INFO "Installing custom wallpapers..."
     mkdir -p "$CUSTOM_BACKGROUNDS_DIR"
@@ -167,7 +168,7 @@ apply_customizations() {
     ln -sf "$CUSTOM_BACKGROUNDS_DIR/deb.png" /usr/share/desktop-base/kali-theme/login/background
 
     log INFO "Disabling terminal transparency..."
-    local qterminal_conf="$PENTESTER_HOME/.config/qterminal.org/qterminal.ini"
+    local qterminal_conf="$USER_HOME/.config/qterminal.org/qterminal.ini"
     if [ -f "$qterminal_conf" ]; then
         sed -i 's/^TerminalTransparency=.*/TerminalTransparency=0/' "$qterminal_conf"
         sed -i 's/^ApplicationTransparency=.*/ApplicationTransparency=0/' "$qterminal_conf"
@@ -206,23 +207,23 @@ install_pentest_tools() {
 # Function: pipx Tools Setup
 # ---------------------------------------
 install_pipx_tools() {
-    header "Installing pipx Tools (user: $PENTESTER_USER)"
-    sudo -u "$PENTESTER_USER" pipx ensurepath || {
-        log ERROR "pipx ensurepath failed for $PENTESTER_USER."
+    header "Installing pipx Tools (user: $USERNAME)"
+    sudo -u "$USERNAME" pipx ensurepath || {
+        log ERROR "pipx ensurepath failed for $USERNAME."
         exit 1
     }
 
-    sudo -u "$PENTESTER_USER" pipx install impacket
-    sudo -u "$PENTESTER_USER" pipx install adidnsdump
-    sudo -u "$PENTESTER_USER" pipx install git+https://github.com/Pennyw0rth/NetExec
-    sudo -u "$PENTESTER_USER" pipx install bloodhound-ce
-    sudo -u "$PENTESTER_USER" pipx install certipy-ad
-    sudo -u "$PENTESTER_USER" pipx install updog
-    sudo -u "$PENTESTER_USER" pipx install sslyze
-    sudo -u "$PENTESTER_USER" pipx install prowler
-    sudo -u "$PENTESTER_USER" pipx install scoutsuite
+    sudo -u "$USERNAME" pipx install impacket
+    sudo -u "$USERNAME" pipx install adidnsdump
+    sudo -u "$USERNAME" pipx install git+https://github.com/Pennyw0rth/NetExec
+    sudo -u "$USERNAME" pipx install bloodhound-ce
+    sudo -u "$USERNAME" pipx install certipy-ad
+    sudo -u "$USERNAME" pipx install updog
+    sudo -u "$USERNAME" pipx install sslyze
+    sudo -u "$USERNAME" pipx install prowler
+    sudo -u "$USERNAME" pipx install scoutsuite
 
-    sudo -u "$PENTESTER_USER" pipx upgrade-all
+    sudo -u "$USERNAME" pipx upgrade-all
 }
 
 # ---------------------------------------
@@ -238,7 +239,7 @@ clone_repos() {
         local path="$TOOLS_DIR/$name"
         if [ ! -d "$path" ]; then
             git clone "$repo" "$path"
-            chown -R "$PENTESTER_USER:$PENTESTER_USER" "$path"
+            chown -R "$USERNAME:$USERNAME" "$path"
         else
             log INFO "$name already cloned, skipping."
         fi
@@ -256,7 +257,7 @@ clone_repos() {
     clone_and_venv "pywhisker"      "https://github.com/ShutdownRepo/pywhisker.git"
     clone_and_venv "ntlmv1-multi"   "https://github.com/evilmog/ntlmv1-multi.git"
 
-    chown -R "$PENTESTER_USER:$PENTESTER_USER" "$TOOLS_DIR"
+    chown -R "$USERNAME:$USERNAME" "$TOOLS_DIR"
 }
 
 
@@ -270,9 +271,9 @@ install_burp() {
         return
     fi
     mkdir -p "$SYSUTILS_DIR"
-    mkdir -p "/home/$PENTESTER_USER/.java/.userPrefs/burp"
+    mkdir -p "/home/$USERNAME/.java/.userPrefs/burp"
     mkdir -p "/root/.java/.userPrefs/burp"
-    chown "$PENTESTER_USER:$PENTESTER_USER" "/home/$PENTESTER_USER/.java/.userPrefs" -R
+    chown "$USERNAME:$USERNAME" "/home/$USERNAME/.java/.userPrefs" -R
 
     wget "https://portswigger.net/burp/releases/download?product=pro&type=Linux" -O "$SYSUTILS_DIR/burpsuitepro.sh"
     chmod +x "$SYSUTILS_DIR/burpsuitepro.sh"
@@ -306,12 +307,12 @@ install_docker() {
     apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
     groupadd docker 2>/dev/null || true
-    usermod -aG docker "$PENTESTER_USER" || true
-    log INFO "User '$PENTESTER_USER' was added to 'docker' group. A logout/login may be required."
+    usermod -aG docker "$USERNAME" || true
+    log INFO "User '$USERNAME' was added to 'docker' group. A logout/login may be required."
 
-    mkdir -p "/home/$PENTESTER_USER/.docker"
-    chown "$PENTESTER_USER:$PENTESTER_USER" "/home/$PENTESTER_USER/.docker" -R || true
-    chmod g+rwx "/home/$PENTESTER_USER/.docker" -R || true
+    mkdir -p "/home/$USERNAME/.docker"
+    chown "$USERNAME:$USERNAME" "/home/$USERNAME/.docker" -R || true
+    chmod g+rwx "/home/$USERNAME/.docker" -R || true
 }
 
 
@@ -323,7 +324,7 @@ setup_bloodhound() {
     mkdir -p "$BLOODHOUND_DIR"
     cp "$WORK_DIR/docker/bloodhound.yaml" "$BLOODHOUND_DIR/docker-compose.yml"
     # docker compose -f "$BLOODHOUND_DIR/docker-compose.yml" pull
-    chown -R "$PENTESTER_USER:$PENTESTER_USER" "$BLOODHOUND_DIR"
+    chown -R "$USERNAME:$USERNAME" "$BLOODHOUND_DIR"
 }
 
 # ---------------------------------------
@@ -334,7 +335,7 @@ setup_nessus() {
     mkdir -p "$NESSUS_DIR"
     cp "$WORK_DIR/docker/nessus.yaml" "$NESSUS_DIR/docker-compose.yml"
     # docker compose -f "$NESSUS_DIR/docker-compose.yml" pull
-    chown -R "$PENTESTER_USER:$PENTESTER_USER" "$NESSUS_DIR"
+    chown -R "$USERNAME:$USERNAME" "$NESSUS_DIR"
 
     log INFO "Manual step required:"
     echo "Put Nessus ACTIVATION_CODE in $NESSUS_DIR/docker-compose.yml"
@@ -344,9 +345,9 @@ setup_nessus() {
 # ---------------------------------------
 # Main Execution
 # ---------------------------------------
-id "$PENTESTER_USER" &>/dev/null || { log ERROR "User '$PENTESTER_USER' does not exist. Aborting."; exit 1; }
+id "$USERNAME" &>/dev/null || { log ERROR "User '$USERNAME' does not exist. Aborting."; exit 1; }
 
-log INFO "Mode : $INSTALL_MODE | User : $PENTESTER_USER"
+log INFO "Mode : $INSTALL_MODE | User : $USERNAME"
 
 case "$INSTALL_MODE" in
     full)

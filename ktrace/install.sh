@@ -25,7 +25,8 @@ log() {
 
 # Variables
 INSTALL_DIR="/opt/ktrace"
-USER_HOME="/home/pentester"
+USERNAME="${USERNAME:-pentester}"
+USER_HOME="/home/$USERNAME"
 SERVICE_DIR="$USER_HOME/.config/systemd/user"
 SCRIPT_NAME="ktrace.sh"
 SERVICE_NAME="ktrace.service"
@@ -62,11 +63,11 @@ chmod 644 "$INSTALL_DIR/zshrc_hook.zsh"
 log INFO "Installation du service systemd --user"
 mkdir -p "$SERVICE_DIR"
 cp "$(dirname "$0")/$SERVICE_NAME" "$SERVICE_DIR/$SERVICE_NAME"
-chown -R pentester:pentester "$SERVICE_DIR"
+chown -R "$USERNAME:$USERNAME" "$SERVICE_DIR"
 
 # Attribution des droits sur le dossier ktrace
-log INFO "Attribution des droits à l'utilisateur pentester"
-chown -R pentester:pentester "$INSTALL_DIR"
+log INFO "Attribution des droits à l'utilisateur $USERNAME"
+chown -R "$USERNAME:$USERNAME" "$INSTALL_DIR"
 
 # Ajout des alias dans .zshrc s'ils n'existent pas
 ALIASES=(
@@ -87,11 +88,11 @@ done
 HOOK_LINE="[[ -f /opt/ktrace/zshrc_hook.zsh ]] && source /opt/ktrace/zshrc_hook.zsh"
 grep -qF "zshrc_hook.zsh" "$ALIAS_FILE" || echo "$HOOK_LINE" >> "$ALIAS_FILE"
 
-chown pentester:pentester "$ALIAS_FILE"
+chown "$USERNAME:$USERNAME" "$ALIAS_FILE"
 
 # Ending
 log SUCCESS "Installation terminée."
-log INFO "Connectez-vous en tant que pentester et exécutez :"
+log INFO "Connectez-vous en tant que $USERNAME et exécutez :"
 log INFO "    systemctl --user daemon-reload"
 log INFO "    systemctl --user enable ktrace.service"
 log INFO "    systemctl --user start ktrace.service"
