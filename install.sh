@@ -148,7 +148,8 @@ install_pentest_tools() {
     apt install -yqq pipx nmap whatweb nikto sslscan curl gobuster ffuf \
         exploitdb sqlmap hydra tcpdump hashcat responder mitm6 \
         wordlists libimage-exiftool-perl airgeddon testssl.sh whois \
-        gitleaks dnsrecon dnsenum freerdp3-x11
+        gitleaks dnsrecon dnsenum freerdp3-x11 tftp-hpa snmp onesixtyone \
+        webshells
 
     log INFO "Installing Kerberos development libraries..."
     apt install -yqq libkrb5-dev krb5-config
