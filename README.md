@@ -15,7 +15,7 @@ Sans argument, le script demande interactivement le nom d'utilisateur et le mode
 | Argument | Description | Défaut |
 |---|---|---|
 | `-u`, `--user` | Nom du user pentester | `pentester` |
-| `-m`, `--mode` | Mode d'installation (`full` ou `oscp`) | interactif |
+| `-m`, `--mode` | Mode d'installation (`full`, `oscp` ou `base`) | interactif |
 
 ```
 sudo ./install.sh -u monuser -m full
@@ -27,6 +27,12 @@ sudo ./install.sh -m oscp
 **`full`** — installation complète :
 - Setup système de base + personnalisations
 - ktrace, outils pentest APT, outils pipx
+- Clonage des repos
+- Burp Suite Pro, Docker, BloodHound CE, Nessus
+
+**`base`** — installation sans les outils pentest APT :
+- Setup système de base + personnalisations
+- ktrace, outils pipx
 - Clonage des repos
 - Burp Suite Pro, Docker, BloodHound CE, Nessus
 

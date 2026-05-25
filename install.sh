@@ -52,17 +52,17 @@ if [ -z "$INSTALL_MODE" ]; then
     echo ""
     echo "Choisir le mode d'installation :"
     PS3="> "
-    select INSTALL_MODE in "full" "oscp"; do
+    select INSTALL_MODE in "full" "oscp" "base"; do
         case "$INSTALL_MODE" in
-            full|oscp) break ;;
-            *) echo "Choix invalide, entrer 1 ou 2." ;;
+            full|oscp|base) break ;;
+            *) echo "Choix invalide, entrer 1, 2 ou 3." ;;
         esac
     done
 fi
 
 case "$INSTALL_MODE" in
-    full|oscp) ;;
-    *) echo "Mode inconnu : '$INSTALL_MODE'. Valeurs valides : full, oscp."; exit 1 ;;
+    full|oscp|base) ;;
+    *) echo "Mode inconnu : '$INSTALL_MODE'. Valeurs valides : full, oscp, base."; exit 1 ;;
 esac
 
 USER_HOME="/home/$USERNAME"
