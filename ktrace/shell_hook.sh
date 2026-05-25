@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/sh
 if [[ -z "$KTRACE_SESSION" ]] && systemctl --user is-active --quiet ktrace.service 2>/dev/null; then
     export KTRACE_SESSION=1
     _ktrace_dir="/opt/ktrace/terminals/$(date +%Y-%m-%d)"

@@ -362,9 +362,9 @@ setup_nessus() {
 # ---------------------------------------
 if ! id "$USERNAME" &>/dev/null; then
     log INFO "User '$USERNAME' does not exist, creating..."
-    adduser "$USERNAME"
+    adduser --shell /bin/zsh "$USERNAME"
     usermod -aG sudo "$USERNAME"
-    log SUCCESS "User '$USERNAME' created and added to sudo group."
+    log SUCCESS "User '$USERNAME' created and added to sudo group (shell: zsh)."
 fi
 
 log INFO "Mode : $INSTALL_MODE | User : $USERNAME"

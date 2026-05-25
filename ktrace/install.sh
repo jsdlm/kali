@@ -30,7 +30,6 @@ USER_HOME="/home/$USERNAME"
 SERVICE_DIR="$USER_HOME/.config/systemd/user"
 SCRIPT_NAME="ktrace.sh"
 SERVICE_NAME="ktrace.service"
-ALIAS_FILE="$USER_HOME/.zshrc"
 
 # Vérification des droits
 if [ "$EUID" -ne 0 ]; then
@@ -56,8 +55,8 @@ cp "$(dirname "$0")/$SCRIPT_NAME" "$INSTALL_DIR/"
 chmod +x "$INSTALL_DIR/$SCRIPT_NAME"
 
 log INFO "Copie du hook terminal dans $INSTALL_DIR"
-cp "$(dirname "$0")/zshrc_hook.zsh" "$INSTALL_DIR/zshrc_hook.zsh"
-chmod 644 "$INSTALL_DIR/zshrc_hook.zsh"
+cp "$(dirname "$0")/shell_hook.sh" "$INSTALL_DIR/shell_hook.sh"
+chmod 644 "$INSTALL_DIR/shell_hook.sh"
 
 # Préparation du service utilisateur
 log INFO "Installation du service systemd --user"
@@ -79,16 +78,20 @@ ALIASES=(
     "alias ktrace-disable='systemctl --user disable ktrace'"
 )
 
-log INFO "Ajout des alias dans $ALIAS_FILE (si absents)"
-for alias in "${ALIASES[@]}"; do
-    grep -qxF "$alias" "$ALIAS_FILE" || echo "$alias" >> "$ALIAS_FILE"
+for RC_FILE in "$USER_HOME/.zshrc" "$USER_HOME/.bashrc"; do
+    log INFO "Ajout des alias dans $RC_FILE (si absents)"
+    for alias in "${ALIASES[@]}"; do
+        grep -qxF "$alias" "$RC_FILE" || echo "$alias" >> "$RC_FILE"
+    done
+    chown "$USERNAME:$USERNAME" "$RC_FILE"
 done
 
-# Ajout du hook de journalisation terminal (si absent)
-HOOK_LINE="[[ -f /opt/ktrace/zshrc_hook.zsh ]] && source /opt/ktrace/zshrc_hook.zsh"
-grep -qF "zshrc_hook.zsh" "$ALIAS_FILE" || echo "$HOOK_LINE" >> "$ALIAS_FILE"
-
-chown "$USERNAME:$USERNAME" "$ALIAS_FILE"
+# Ajout du hook de journalisation terminal dans .zshrc et .bashrc (si absent)
+HOOK_LINE="[[ -f /opt/ktrace/shell_hook.sh ]] && source /opt/ktrace/shell_hook.sh"
+for RC_FILE in "$USER_HOME/.zshrc" "$USER_HOME/.bashrc"; do
+    grep -qF "shell_hook.sh" "$RC_FILE" || echo "$HOOK_LINE" >> "$RC_FILE"
+    chown "$USERNAME:$USERNAME" "$RC_FILE"
+done
 
 # Ending
 log SUCCESS "Installation terminée."
