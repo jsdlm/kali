@@ -2,6 +2,7 @@
 
 KTRACE_DIR="/opt/ktrace"
 SCREENSHOT_DIR="$KTRACE_DIR/screenshots"
+TERMINAL_DIR="$KTRACE_DIR/terminals"
 LOG_FILE="$KTRACE_DIR/log/ktrace.log"
 DELAY=5
 
@@ -17,6 +18,7 @@ log() {
 
 # Préparation des répertoires
 mkdir -p "$SCREENSHOT_DIR" || { log "ERROR" "Impossible de créer $SCREENSHOT_DIR"; exit 1; }
+mkdir -p "$TERMINAL_DIR"   || { log "ERROR" "Impossible de créer $TERMINAL_DIR"; exit 1; }
 mkdir -p "$(dirname "$LOG_FILE")" || { log "ERROR" "Impossible de créer $(dirname "$LOG_FILE")"; exit 1; }
 
 # Attente de l'affichage graphique
@@ -56,7 +58,22 @@ fi
 log "INFO" "Démarrage du service ktrace (intervalle = ${DELAY}s)"
 
 while true; do
-  # Compression des dossiers précédents
+  # Compression des journaux de terminaux précédents
+  for dir in "$TERMINAL_DIR"/*/; do
+    dir_date=$(basename "$dir")
+    if [ "$dir_date" != "$(date '+%Y-%m-%d')" ] && [ -d "$dir" ]; then
+      zip_path="$TERMINAL_DIR/$dir_date.zip"
+      zip -r "$zip_path" "$dir" -x "*.zip" &>/dev/null
+      if [ $? -eq 0 ]; then
+        rm -rf "$dir"
+        log "INFO" "Journaux terminaux $dir_date compressés et supprimés."
+      else
+        log "WARNING" "Échec de la compression des journaux terminaux $dir_date."
+      fi
+    fi
+  done
+
+  # Compression des dossiers de screenshots précédents
   for dir in "$SCREENSHOT_DIR"/*/; do
     dir_date=$(basename "$dir")
     if [ "$dir_date" != "$(date '+%Y-%m-%d')" ] && [ -d "$dir" ]; then
