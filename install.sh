@@ -289,6 +289,10 @@ install_burp() {
     chmod +x "$SYSUTILS_DIR/burpsuitepro.sh"
     bash "$SYSUTILS_DIR/burpsuitepro.sh"
 
+    curl -fsSL "https://repo1.maven.org/maven2/org/python/jython-installer/2.7.4/jython-installer-2.7.4.jar" \
+        -o "$USER_HOME/jython-installer-2.7.4.jar"
+    chown "$USERNAME:$USERNAME" "$USER_HOME/jython-installer-2.7.4.jar"
+
     log INFO "Manual step required:"
     echo "    cp root_prefs.xml -d /root/.java/.userPrefs/burp/prefs.xml"
     echo "    cp pentester_prefs.xml -d /home/pentester/.java/.userPrefs/burp/prefs.xml"
@@ -356,7 +360,12 @@ setup_nessus() {
 # ---------------------------------------
 # Main Execution
 # ---------------------------------------
-id "$USERNAME" &>/dev/null || { log ERROR "User '$USERNAME' does not exist. Aborting."; exit 1; }
+if ! id "$USERNAME" &>/dev/null; then
+    log INFO "User '$USERNAME' does not exist, creating..."
+    adduser "$USERNAME"
+    usermod -aG sudo "$USERNAME"
+    log SUCCESS "User '$USERNAME' created and added to sudo group."
+fi
 
 log INFO "Mode : $INSTALL_MODE | User : $USERNAME"
 
