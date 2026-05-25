@@ -214,6 +214,15 @@ install_pipx_tools() {
         exit 1
     }
 
+    apt-get remove --purge -y \
+        impacket-scripts python3-impacket \
+        netexec \
+        bloodhound \
+        certipy-ad \
+        sslyze \
+        2>/dev/null || true
+    apt-get autoremove -y 2>/dev/null || true
+
     sudo -u "$USERNAME" pipx install impacket
     sudo -u "$USERNAME" pipx install adidnsdump
     sudo -u "$USERNAME" pipx install git+https://github.com/Pennyw0rth/NetExec
@@ -323,8 +332,9 @@ install_docker() {
 setup_bloodhound() {
     header "Setting up BloodHound CE"
     mkdir -p "$BLOODHOUND_DIR"
-    cp "$WORK_DIR/docker/bloodhound.yaml" "$BLOODHOUND_DIR/docker-compose.yml"
-    # docker compose -f "$BLOODHOUND_DIR/docker-compose.yml" pull
+    curl -fsSL "https://raw.githubusercontent.com/SpecterOps/bloodhound/main/examples/docker-compose/docker-compose.yml" \
+        -o "$BLOODHOUND_DIR/docker-compose.yml"
+    cp "$WORK_DIR/docker/bloodhound.env" "$BLOODHOUND_DIR/.env"
     chown -R "$USERNAME:$USERNAME" "$BLOODHOUND_DIR"
 }
 
@@ -351,6 +361,24 @@ id "$USERNAME" &>/dev/null || { log ERROR "User '$USERNAME' does not exist. Abor
 log INFO "Mode : $INSTALL_MODE | User : $USERNAME"
 
 case "$INSTALL_MODE" in
+    base)
+        setup_base_system
+        apply_customizations
+        install_ktrace
+        clone_repos
+        install_docker
+        install_pipx_tools
+        setup_bloodhound
+        install_burp
+        setup_nessus
+        post_install_notes
+        ;;
+    oscp)
+        install_ktrace
+        clone_repos
+        install_docker
+        setup_bloodhound
+        ;;
     full)
         setup_base_system
         apply_customizations
@@ -363,12 +391,6 @@ case "$INSTALL_MODE" in
         setup_bloodhound
         setup_nessus
         post_install_notes
-        ;;
-    oscp)
-        install_ktrace
-        clone_repos
-        install_docker
-        setup_bloodhound
         ;;
 esac
 
