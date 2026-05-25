@@ -232,6 +232,7 @@ install_pipx_tools() {
     sudo -u "$USERNAME" pipx install sslyze
     sudo -u "$USERNAME" pipx install prowler
     sudo -u "$USERNAME" pipx install scoutsuite
+    sudo -u "$USERNAME" pipx install pypykatz
 
     sudo -u "$USERNAME" pipx upgrade-all
 }
